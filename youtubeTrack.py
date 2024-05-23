@@ -1,15 +1,16 @@
 import logging
 import sys
 import requests
-import json
+import json 
+import pformat
 from config import config
 
-
-link = "https://www.googleapis.com/youtube/v3/playlistItems"
+list_link = "https://www.googleapis.com/youtube/v3/playlistItems"
+video_link = "https://www.googleapis.com/youtube/v3/videos"
 
 def fetch_playlist_items_page(google_api_key,youtube_playlist_id, page_token= None):
 
-    response = requests.get(link, 
+    response = requests.get(list_link, 
         params={
             "key" : google_api_key, 
             "playlistId": youtube_playlist_id ,
@@ -23,11 +24,11 @@ def fetch_playlist_items_page(google_api_key,youtube_playlist_id, page_token= No
 
 def fetch_videos_page(google_api_key,video_id, page_token= None):
 
-    response = requests.get(link, 
+    response = requests.get(video_link, 
         params={
             "key" : google_api_key, 
             "id": video_id ,
-            "part": "contentDetails",
+            "part": "snippet, statistics",
             "pageToken": page_token,
     })
     
@@ -45,6 +46,15 @@ def fetch_playlist_items(google_api_key,youtube_playlist_id, page_token= None):
     if next_page_token is not None:
         yield from fetch_playlist_items(google_api_key,youtube_playlist_id, next_page_token)
 
+def fetch_videos(google_api_key,youtube_playlist_id, page_token= None):
+    
+    payload = fetch_videos_page(google_api_key,youtube_playlist_id, page_token)
+    
+    yield from payload["items"]
+    next_page_token = payload.get("nextPageToken")
+    if next_page_token is not None:
+        yield from fetch_videos(google_api_key,youtube_playlist_id, next_page_token)
+
 
 def main():
     logging.info("Start ...")
@@ -52,7 +62,9 @@ def main():
     youtube_playlist_id = config["youtube_playlist_id"]
     
     for v_item in fetch_playlist_items(google_api_key,youtube_playlist_id):
-        logging.info("GOT %s", v_item)
+        video_id = v_item["contentDetails"]["videoId"]
+        for video in fetch_videos(google_api_key,video_id):
+            logging.info("GOT %s", pformat(video))
 
 
 
