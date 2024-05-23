@@ -59,6 +59,10 @@ def summariz_video(video):
     return {
         "video_id": video["id"],
         "title": video["snippet"]["title"],
+        "view": int(video["statistics"].get("viewCount")),
+        "like": int(video["statistics"].get("likeCount")),
+        "comment": int(video["statistics"].get("commentCount")),
+        
     }
 
 def main():
