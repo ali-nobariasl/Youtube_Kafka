@@ -69,17 +69,42 @@ def summariz_video(video):
         
     }
 
+def on_delivery(err, record):
+    pass
+
 def main():
     logging.info("Start ...")
     google_api_key = config["google_api_key"]
     youtube_playlist_id = config["youtube_playlist_id"]
+   
+    kafka_config = config["kafka"] | {
+        "key.serializer": StringSerializer(),
+        "value.serializer": AvroSerializer(
+            schema_registry_client,
+            youtube_videos_value_schema.schema.schema_str,
+        ),
+    }
+    producer = SerializingProducer(kafka_config)
+    
     
     for v_item in fetch_playlist_items(google_api_key,youtube_playlist_id):
         video_id = v_item["contentDetails"]["videoId"]
         for video in fetch_videos(google_api_key,video_id):
             logging.info("GOT %s", summariz_video(video))
 
+            producer.produce(
+                topic="youtube_videos",
+                key=video_id,
+                value={
+                    "TITLE": video["snippet"]["title"],
+                    "VIEWS": int(video["statistics"].get("viewCount", 0)),
+                    "LIKES": int(video["statistics"].get("likeCount", 0)),
+                    "COMMENTS": int(video["statistics"].get("commentCount", 0)),
+                },
+                on_delivery=on_delivery,
+            )
 
+    producer.flush()
 
 if __name__=='__main__':
     logging.basicConfig(level=logging.INFO)
