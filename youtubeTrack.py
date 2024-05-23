@@ -4,6 +4,10 @@ import requests
 import json 
 import pformat
 from config import config
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.serialization import StringSerializer
+from confluent_kafka.schema_registry.avro import AvroSerializer
+from confluent_kafka import SerializingProducer
 
 list_link = "https://www.googleapis.com/youtube/v3/playlistItems"
 video_link = "https://www.googleapis.com/youtube/v3/videos"
