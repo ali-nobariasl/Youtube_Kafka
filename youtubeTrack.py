@@ -21,6 +21,20 @@ def fetch_playlist_items_page(google_api_key,youtube_playlist_id, page_token= No
     logging.debug("GOT %s", payload)
     return payload
 
+def fetch_videos_page(google_api_key,video_id, page_token= None):
+
+    response = requests.get(link, 
+        params={
+            "key" : google_api_key, 
+            "id": video_id ,
+            "part": "contentDetails",
+            "pageToken": page_token,
+    })
+    
+    payload =json.loads(response.text)
+    logging.debug("GOT %s", payload)
+    return payload
+
 
 def fetch_playlist_items(google_api_key,youtube_playlist_id, page_token= None):
     
