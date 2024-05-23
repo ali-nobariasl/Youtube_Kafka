@@ -55,6 +55,11 @@ def fetch_videos(google_api_key,youtube_playlist_id, page_token= None):
     if next_page_token is not None:
         yield from fetch_videos(google_api_key,youtube_playlist_id, next_page_token)
 
+def summariz_video(video):
+    return {
+        "video_id": video["id"],
+        "title": video["snippet"]["title"],
+    }
 
 def main():
     logging.info("Start ...")
@@ -64,7 +69,7 @@ def main():
     for v_item in fetch_playlist_items(google_api_key,youtube_playlist_id):
         video_id = v_item["contentDetails"]["videoId"]
         for video in fetch_videos(google_api_key,video_id):
-            logging.info("GOT %s", pformat(video))
+            logging.info("GOT %s", summariz_video(video))
 
 
 
